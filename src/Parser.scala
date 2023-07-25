@@ -83,7 +83,7 @@ class Parser(val tokens: util.List[Token]) {
   
   private def statement(): Stmt = {
     if (`match`(PRINT)) return printStatement()
-    if (`match`(LEFT_PAREN)) return Block(block())
+    if (`match`(LEFT_BRACE)) return Block(block())
     
     expressionStatement()
   }
@@ -193,8 +193,8 @@ class Parser(val tokens: util.List[Token]) {
   }
 
   private def primary(): Expr = {
-    if (`match`(FALSE)) return Literal(Boolean.box(false)) 
-    if (`match`(TRUE)) return Literal(Boolean.box(true))  
+    if (`match`(FALSE)) return Literal(Boolean.box(false))
+    if (`match`(TRUE)) return Literal(Boolean.box(true))
     if (`match`(NIL)) return Literal(null)
 
     if (`match`(NUMBER, STRING)) {
@@ -211,7 +211,7 @@ class Parser(val tokens: util.List[Token]) {
       return Grouping(expr)
     }
 
-    throw error(peek(), "Expect expression.")
+    throw error(peek(), "Expect expression")
   }
 
   def parse(): util.List[Stmt] = {
