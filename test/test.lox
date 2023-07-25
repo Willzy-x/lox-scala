@@ -18,6 +18,11 @@ print a;
 print b;
 print c;
 
+if (1 + 2 == 3)
+    print "Correct";
+else
+    print "Incorrect"
+
 print "one";
 print true;
 

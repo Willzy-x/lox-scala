@@ -47,10 +47,9 @@ class Parser(val tokens: util.List[Token]) {
         if (previous().tokenType == SEMICOLON) break()
         peek().tokenType match  {
           case CLASS | FOR | FUN | IF | PRINT | RETURN | VAR | WHILE => break()
-          case other => // Do nothing
+          case other => advance()
         }
       }
-      advance()
   }
 
   private def `match`(types: TokenType *): Boolean = {
@@ -82,6 +81,7 @@ class Parser(val tokens: util.List[Token]) {
   }
   
   private def statement(): Stmt = {
+    if (`match`(IF)) return ifStatement()
     if (`match`(PRINT)) return printStatement()
     if (`match`(LEFT_BRACE)) return Block(block())
     
@@ -95,8 +95,22 @@ class Parser(val tokens: util.List[Token]) {
       statements.add(declaration())
     }
 
-    consume(RIGHT_BRACE, "Expect '}' after block")
+    consume(RIGHT_BRACE, "Expect '}' after block.")
     statements
+  }
+
+  private def ifStatement(): Stmt = {
+    consume(LEFT_PAREN, "Expect '(' after 'if'.")
+    val condition = expression()
+    consume(RIGHT_PAREN, "Expect ')' after if condition.")
+
+    val thenBranch = statement()
+    var elseBranch: Stmt = null
+    if (`match`(ELSE)) {
+      elseBranch = statement()
+    }
+
+    If(condition, thenBranch, elseBranch)
   }
   
   private def printStatement(): Stmt = {

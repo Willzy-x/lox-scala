@@ -14,7 +14,7 @@ object Lox {
   private val interpreter = Interpreter()
 
   private def report(line: Int, where: String, message: String): Unit = {
-    Console.err.printf(s"[line: $line] Error $where: $message.\n")
+    Console.err.printf(s"[line: $line] Error $where: $message\n")
   }
 
   def error(token: Token, message: String): Unit = {

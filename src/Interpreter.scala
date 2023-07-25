@@ -138,6 +138,14 @@ class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
     value
   }
 
+  override def visitIfStmt(stmt: If): Unit = {
+    if (isTruthy(stmt.condition)) {
+      execute(stmt.thenBranch)
+    } else if (stmt.elseBranch != null) {
+      execute(stmt.elseBranch)
+    }
+  }
+
   override def visitExpressionStmt(stmt: Expression): Unit = {
     evaluate(stmt.expression)
   }
@@ -162,7 +170,7 @@ class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
 
   def interpret(statements: util.List[Stmt]): Unit = { 
     try {
-      statements.forEach(execute)
+      statements.forEach(i => if (i != null) execute(i))
     } catch {
       case e: RuntimeError => Lox.runtimeError(e)
     }

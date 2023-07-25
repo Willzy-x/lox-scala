@@ -12,6 +12,12 @@ class Expression(val expression: Expr) extends Stmt {
   }
 }
 
+class If(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stmt) extends Stmt {
+  override def accept[A](visitor: Stmt.Visitor[A]): A = {
+    visitor.visitIfStmt(this)
+  }
+}
+
 class Print(val expression: Expr) extends Stmt {
   override def accept[A](visitor: Stmt.Visitor[A]): A = {
     visitor.visitPrintStmt(this)
@@ -39,4 +45,6 @@ object Stmt {
    def visitVarStmt(stmt: Var): A
    
    def visitBlockStmt(stmt: Block): A
+   
+   def visitIfStmt(stmt: If): A
 }
