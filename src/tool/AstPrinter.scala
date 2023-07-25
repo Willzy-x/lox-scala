@@ -41,6 +41,10 @@ class AstPrinter extends Expr.Visitor[String] {
   override def visitAssignExpr(expr: Assign): String = {
     parenthesize(expr.name.lexeme, expr.value)
   }
+
+  override def visitLogicalExpr(expr: Logical): String = {
+    parenthesize(expr.operator.lexeme, expr.left, expr.right)
+  }
 }
 
 @main def printTest(): Unit = {

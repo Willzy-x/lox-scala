@@ -1,31 +1,9 @@
-var a = "global a";
-var b = "global b";
-var c = "global c";
-{
-    var a = "outer a";
-    var b = "outer b";
-    {
-        var a = "inner a";
-        print a;
-        print b;
-        print c;
-    }
-    print a;
-    print b;
-    print c;
+for (var x = 1; x < 10; x = x + 1) {
+    print x;
 }
+
+var a = 0;
+while ( a < 10 ){
 print a;
-print b;
-print c;
-
-if (1 + 2 == 3)
-    print "Correct";
-else
-    print "Incorrect"
-
-print "one";
-print true;
-
-var a = 1;
-var b = 2;
-print a + b;
+a = a + 1;
+}

@@ -24,6 +24,7 @@ class Environment(private val enclosing: Environment = null) {
   def assign(name: Token, value: Object): Unit = {
     if (values.contains(name.lexeme)) {
       values.addOne((name.lexeme, value))
+      return
     }
     
     if (enclosing != null) {

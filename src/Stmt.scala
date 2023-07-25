@@ -36,6 +36,12 @@ class Block(val statements: util.List[Stmt]) extends Stmt {
   }
 }
 
+class While(val condition: Expr, val body: Stmt) extends Stmt {
+  override def accept[A](visitor: Stmt.Visitor[A]): A = {
+    visitor.visitWhileStmt(this)
+  }
+}
+
 object Stmt {
  trait Visitor[A]:
    def visitExpressionStmt(stmt: Expression): A
@@ -47,4 +53,6 @@ object Stmt {
    def visitBlockStmt(stmt: Block): A
    
    def visitIfStmt(stmt: If): A
+   
+   def visitWhileStmt(stmt: While): A
 }

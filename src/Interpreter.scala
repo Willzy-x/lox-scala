@@ -126,6 +126,18 @@ class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
     null
   }
 
+  override def visitLogicalExpr(expr: Logical): Object = {
+    val left = evaluate(expr.left)
+
+    if (expr.operator.tokenType == OR) {
+      if (isTruthy(expr.left)) return left
+    } else {
+      if (!isTruthy(expr.left)) return left
+    }
+
+    evaluate(expr.right)
+  }
+
   override def visitLiteralExpr(expr: Literal): Object = expr.value
 
   override def visitVariableExpr(expr: Variable): Object = {
@@ -153,6 +165,12 @@ class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
   override def visitPrintStmt(stmt: Print): Unit = {
     val value = evaluate(stmt.expression)
     println(stringify(value))
+  }
+
+  override def visitWhileStmt(stmt: While): Unit = {
+    while (isTruthy(evaluate(stmt.condition))) {
+      execute(stmt.body)
+    }
   }
 
   override def visitVarStmt(stmt: Var): Unit = {

@@ -24,6 +24,12 @@ class Literal(val value: Object) extends Expr {
   }
 }
 
+class Logical(val left: Expr, val operator: Token, val right: Expr) extends Expr {
+  override def accept[A](visitor: Expr.Visitor[A]): A = {
+    visitor.visitLogicalExpr(this)
+  }
+}
+
 class Unary(val operator: Token, val right: Expr) extends Expr {
   override def accept[A](visitor: Expr.Visitor[A]): A = {
     visitor.visitUnaryExpr(this)
@@ -49,6 +55,8 @@ object Expr {
     def visitGroupingExpr(expr: Grouping): A
 
     def visitUnaryExpr(expr: Unary): A
+    
+    def visitLogicalExpr(expr: Logical): A
 
     def visitLiteralExpr(expr: Literal): A
     
