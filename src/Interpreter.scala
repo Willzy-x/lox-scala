@@ -5,7 +5,18 @@ import TokenType.*
 import java.{lang, util}
 
 class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
-  private var environment = Environment()
+  val globals: Environment = Environment()
+  private var environment = globals
+
+  globals.define("clock", new LoxCallable {
+    override def arity(): Int = 0
+
+    override def call(interpreter: Interpreter, arguments: util.List[Object]): Object = {
+      Double.box(System.currentTimeMillis().toDouble / 1000.0)
+    }
+
+    override def toString: String = "<native fn>"
+  })
   
   private def evaluate(expr: Expr): Object = {
     expr.accept(this)
@@ -15,7 +26,7 @@ class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
     stmt.accept(this)
   }
 
-  private def executeBlock(statements: util.List[Stmt], environment: Environment): Unit = {
+  def executeBlock(statements: util.List[Stmt], environment: Environment): Unit = {
     val previous = this.environment
     try {
       this.environment = environment
@@ -110,6 +121,20 @@ class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
     null
   }
 
+  override def visitCallExpr(expr: Call): Object = {
+    val callee = evaluate(expr.callee)
+
+    val arguments: util.List[Object] = util.ArrayList()
+    expr.arguments.forEach(a => arguments.add(evaluate(a)))
+
+    var function: LoxCallable = null
+    callee match
+      case f: LoxCallable => function = f
+      case other => throw RuntimeError(expr.paren, "Can only call functions and classes.")
+
+    function.call(this, arguments)
+  }
+
   override def visitGroupingExpr(expr: Grouping): Object = evaluate(expr.expression)
 
   override def visitUnaryExpr(expr: Unary): Object = {
@@ -151,7 +176,7 @@ class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
   }
 
   override def visitIfStmt(stmt: If): Unit = {
-    if (isTruthy(stmt.condition)) {
+    if (isTruthy(evaluate(stmt.condition))) {
       execute(stmt.thenBranch)
     } else if (stmt.elseBranch != null) {
       execute(stmt.elseBranch)
@@ -162,9 +187,23 @@ class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
     evaluate(stmt.expression)
   }
 
+  override def visitFunctionStmt(stmt: Func): Unit = {
+    val function = LoxFunction(stmt, environment)
+    environment.define(stmt.name.lexeme, function)
+  }
+
   override def visitPrintStmt(stmt: Print): Unit = {
     val value = evaluate(stmt.expression)
     println(stringify(value))
+  }
+
+  override def visitReturnStmt(stmt: Return): Unit = {
+    var value: Object = null
+    if (stmt.value != null) {
+      value = evaluate(stmt.value)
+    }
+
+    throw Ret(value)
   }
 
   override def visitWhileStmt(stmt: While): Unit = {

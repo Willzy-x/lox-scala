@@ -21,6 +21,10 @@ class AstPrinter extends Expr.Visitor[String] {
     parenthesize(expr.operator.lexeme, expr.left, expr.right)
   }
 
+  override def visitCallExpr(expr: Call): String = {
+    parenthesize(expr.paren.lexeme, expr.callee)
+  }
+
   override def visitGroupingExpr(expr: Grouping): String = {
     parenthesize("group", expr.expression)
   }

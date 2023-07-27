@@ -72,6 +72,7 @@ class Parser(val tokens: util.List[Token]) {
 
   private def declaration(): Stmt = {
     try {
+      if (`match`(FUN)) return function("function")
       if (`match`(VAR)) return varDeclaration()
       statement()
     } catch {
@@ -84,6 +85,7 @@ class Parser(val tokens: util.List[Token]) {
     if (`match`(FOR)) return forStatement()
     if (`match`(IF)) return ifStatement()
     if (`match`(PRINT)) return printStatement()
+    if (`match`(RETURN)) return returnStatement()
     if (`match`(WHILE)) return whileStatement()
     if (`match`(LEFT_BRACE)) return Block(block())
     
@@ -161,6 +163,17 @@ class Parser(val tokens: util.List[Token]) {
     consume(SEMICOLON, "Expect ';' after value.")
     Print(value)
   }
+  
+  private def returnStatement(): Stmt = {
+    val keyword = previous()
+    var value: Expr = null
+    if (!check(SEMICOLON)) {
+      value = expression()
+    }
+    
+    consume(SEMICOLON, "Expect ';' after return value.")
+    Return(keyword, value)
+  }
 
   private def whileStatement(): Stmt = {
     consume(LEFT_PAREN, "Expect '(' after 'while'.")
@@ -188,6 +201,25 @@ class Parser(val tokens: util.List[Token]) {
     val expr = expression()
     consume(SEMICOLON, "Expect ';' after expression.")
     Expression(expr)
+  }
+  
+  private def function(kind: String): Func = {
+    val name = consume(IDENTIFIER, s"Expect $kind name.")
+    consume(LEFT_PAREN, s"Expect '(' after $kind name.")
+    val parameters: util.List[Token] = util.ArrayList()
+    if (!check(RIGHT_PAREN)) {
+      while {
+        if (parameters.size() >= 255) {
+          error(peek(), "Can't have more than 255 parameters.")
+        }
+        parameters.add(consume(IDENTIFIER, "Expect parameter name."))
+        `match`(COMMA)
+      } do()
+    }
+    consume(RIGHT_PAREN, "Expect ')' after parameters.")
+    consume(LEFT_BRACE, s"Expect '{' before $kind body.")
+    val body = block()
+    Func(name, parameters, body)
   }
 
   private def expression(): Expr = {
@@ -280,7 +312,34 @@ class Parser(val tokens: util.List[Token]) {
       val right = unary()
       return Unary(operator, right)
     }
-    primary()
+    call()
+  }
+
+  private def call(): Expr = {
+    var expr = primary()
+
+    boundary:
+      while (true) {
+        if (`match`(LEFT_PAREN)) expr = finishCall(expr)
+        else break()
+      }
+    expr
+  }
+
+  private def finishCall(callee: Expr): Expr = {
+    val arguments: util.List[Expr] = util.ArrayList()
+    if (!check(RIGHT_PAREN)) {
+      while {
+        if (arguments.size() >= 255) {
+          error(peek(), "Can't have more than 255 arguments.")
+        }
+        arguments.add(expression())
+        `match`(COMMA)
+      } do ()
+    }
+
+    val paren = consume(RIGHT_PAREN, "Expect ')' after arguments.")
+    Call(callee, paren, arguments)
   }
 
   private def primary(): Expr = {
@@ -313,4 +372,12 @@ class Parser(val tokens: util.List[Token]) {
     
     statements
   }
+}
+
+@main def testDoWhile(): Unit = {
+  val i = 1
+  while {
+    println(i)
+    i < 0
+  } do()
 }

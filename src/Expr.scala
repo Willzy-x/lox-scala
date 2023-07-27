@@ -1,6 +1,7 @@
 package com.craftinginterpreters
 
 import Stmt.Visitor
+import java.util
 
 abstract class Expr {
   def accept[A](visitor: Expr.Visitor[A]): A
@@ -9,6 +10,12 @@ abstract class Expr {
 class Binary(val left: Expr, val operator: Token, val right: Expr) extends Expr {
   override def accept[A](visitor: Expr.Visitor[A]): A = {
     visitor.visitBinaryExpr(this)
+  }
+}
+
+class Call(val callee: Expr, val paren: Token, val arguments: util.List[Expr]) extends Expr {
+  override def accept[A](visitor: Expr.Visitor[A]): A = {
+    visitor.visitCallExpr(this)
   }
 }
 
@@ -51,6 +58,8 @@ class Assign(val name: Token, val value: Expr) extends Expr {
 object Expr {
   trait Visitor[A]:
     def visitBinaryExpr(expr: Binary): A
+    
+    def visitCallExpr(expr: Call): A
 
     def visitGroupingExpr(expr: Grouping): A
 
