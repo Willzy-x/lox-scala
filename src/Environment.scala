@@ -21,6 +21,24 @@ class Environment(private val enclosing: Environment = null) {
     values.addOne((name, value))
   }
 
+  def ancestor(distance: Int): Environment = {
+    var environment = this
+    for (i <- 0 until distance) {
+      environment = environment.enclosing
+    }
+    environment
+  }
+
+  def getAt(distance: Int, name: String): Object = {
+    ancestor(distance).values.get(name) match
+      case Some(o) => o
+      case None => null
+  }
+
+  def assignAt(distance: Int, name: Token, value: Object): Unit ={
+    ancestor(distance).values.put(name.lexeme, value)
+  }
+
   def assign(name: Token, value: Object): Unit = {
     if (values.contains(name.lexeme)) {
       values.addOne((name.lexeme, value))

@@ -1,6 +1,8 @@
 package com.craftinginterpreters
 import java.util
 
+import scala.collection.mutable
+
 class LoxFunction(private val declaration: Func, private val closure: Environment) extends LoxCallable {
   override def arity(): Int = declaration.params.size()
 
@@ -23,7 +25,15 @@ class LoxFunction(private val declaration: Func, private val closure: Environmen
 
 
 @main def test(): Unit = {
-  for (i <- 0 until 1) {
-    println(i)
+  val stack: mutable.Stack[Int] = mutable.Stack()
+
+  for (i <- 0 until 10) {
+    stack.push(i)
   }
+
+  val target = 6
+  stack.foreach(i => {
+    println(i)
+    if (i == 6) return
+  })
 }

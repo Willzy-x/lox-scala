@@ -3,10 +3,12 @@ package com.craftinginterpreters
 import TokenType.*
 
 import java.{lang, util}
+import scala.collection.mutable
 
 class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
-  val globals: Environment = Environment()
+  private val globals: Environment = Environment()
   private var environment = globals
+  private val locals = mutable.HashMap[Expr, Int]()
 
   globals.define("clock", new LoxCallable {
     override def arity(): Int = 0
@@ -24,6 +26,17 @@ class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
   
   private def execute(stmt: Stmt): Unit = {
     stmt.accept(this)
+  }
+
+  def resolve(expr: Expr, depth: Int): Unit = {
+    locals.put(expr, depth)
+  }
+
+  private def lookUpVariable(name: Token, expr: Expr): Object = {
+    val distance = locals.get(expr)
+    distance match
+      case Some(i) => environment.getAt(i, name.lexeme)
+      case None => globals.get(name)
   }
 
   def executeBlock(statements: util.List[Stmt], environment: Environment): Unit = {
@@ -166,12 +179,17 @@ class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
   override def visitLiteralExpr(expr: Literal): Object = expr.value
 
   override def visitVariableExpr(expr: Variable): Object = {
-    environment.get(expr.name)
+    lookUpVariable(expr.name, expr)
   }
 
   override def visitAssignExpr(expr: Assign): Object = {
     val value = evaluate(expr.value)
-    environment.assign(expr.name, value)
+
+    val distance = locals.get(expr)
+    distance match
+      case Some(i) => environment.assignAt(i, expr.name, value)
+      case None => globals.assign(expr.name, value)
+
     value
   }
 
@@ -253,6 +271,7 @@ class Interpreter extends Expr.Visitor[Object], Stmt.Visitor[Unit] {
   val num1 = Double.box(1.12)
   val num2 = Double.box(1.12)
   println(s"num1 equals num2: ${num1.equals(num2)}")
+  println(s"num1 equals 1.12: ${num1.equals(1.12)}")
   println(s"num1 eq num2: ${num1.eq(num2)}")
   println(s"num1 == num2: ${num1 == num2}")
   println(s"null == num2: ${null == num2}")

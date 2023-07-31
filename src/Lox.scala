@@ -42,6 +42,13 @@ object Lox {
     val parser: Parser = Parser(tokens)
     val statements: util.List[Stmt] = parser.parse()
     
+    if (hadError) return
+      
+    val resolver = Resolver(interpreter)
+    resolver.resolve(statements)
+    
+    if (hadError) return 
+    
     interpreter.interpret(statements)
   }
 
